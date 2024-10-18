@@ -81,7 +81,7 @@ def ouichefs_list_files():
 
 # Interface Streamlit
 st.title("Simulation Ouichefs et Visualisation de Stockage")
-st.wrhite("""
+st.write("""
 #include <SPI.h>
 #include <SD.h>
 
