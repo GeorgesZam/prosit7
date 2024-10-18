@@ -120,6 +120,7 @@ st.subheader("Étape 3 : Initialiser la carte SD dans le code Arduino")
 st.write("""
 Voici un exemple de code pour initialiser la carte SD dans votre Arduino. Ce code vérifie si la carte SD est correctement connectée et fonctionne.
 
+''' cpp
 #include <SPI.h>
 #include <SD.h>
 
