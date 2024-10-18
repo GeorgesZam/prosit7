@@ -3,6 +3,8 @@ import json
 from graphviz import Digraph
 import streamlit as st
 import tempfile
+from io import BytesIO
+from PIL import Image
 
 # Créer un répertoire pour simuler la carte SD
 SD_CARD_DIR = "ouichefs_sd_card"
@@ -133,13 +135,12 @@ if st.button("Écrire dans ouichefs"):
                 diagram.edge('root', 'directory_metadata', label="Load into RAM")
                 diagram.edge(f'file_{filename}', f'file_metadata_{filename}', label="Load File Metadata into RAM")
 
-                # Utilisation d'un fichier temporaire pour rendre le diagramme
-                with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
-                    diagram.render(tmpfile.name, format='png', cleanup=False)
-                    tmpfile_path = tmpfile.name
+                # Rendre le diagramme dans un objet BytesIO
+                image_stream = BytesIO(diagram.pipe(format='png'))
 
                 # Afficher l'image générée dans Streamlit
-                st.image(tmpfile_path)
+                image = Image.open(image_stream)
+                st.image(image)
     else:
         st.error("Veuillez entrer un nom de fichier et des données.")
 
