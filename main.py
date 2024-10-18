@@ -81,6 +81,66 @@ def ouichefs_list_files():
 
 # Interface Streamlit
 st.title("Simulation Ouichefs et Visualisation de Stockage")
+st.wrhite("""
+#include <SPI.h>
+#include <SD.h>
+
+const int chipSelect = 4;  // Pin CS pour la carte SD
+const int blockSize = 256; // Taille maximale d'un bloc de données
+
+void setup() {
+  Serial.begin(9600);
+  while (!Serial) {
+    ; // Attendre l'ouverture du port série
+  }
+
+  if (!SD.begin(chipSelect)) {
+    Serial.println("Échec de l'initialisation de la carte SD.");
+    return;
+  }
+  Serial.println("Carte SD initialisée.");
+
+  // Créer un fichier avec des blocs de données
+  String data = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.";
+
+  // Découper les données en blocs de 256 octets
+  for (int i = 0; i < data.length(); i += blockSize) {
+    String block = data.substring(i, i + blockSize);
+    saveBlock("data.txt", block);
+  }
+
+  // Lire les blocs et les afficher
+  readBlocks("data.txt");
+}
+
+void saveBlock(const char* filename, String block) {
+  File dataFile = SD.open(filename, FILE_WRITE);
+  if (dataFile) {
+    dataFile.println(block);
+    dataFile.close();
+    Serial.println("Bloc enregistré.");
+  } else {
+    Serial.println("Erreur d'ouverture du fichier.");
+  }
+}
+
+void readBlocks(const char* filename) {
+  File dataFile = SD.open(filename);
+  if (dataFile) {
+    Serial.println("Lecture des blocs :");
+    while (dataFile.available()) {
+      Serial.write(dataFile.read());
+    }
+    dataFile.close();
+  } else {
+    Serial.println("Erreur d'ouverture du fichier.");
+  }
+}
+
+void loop() {
+  // Boucle vide
+}
+""")
 
 # Explication du fonctionnement d'Ouichefs
 st.header("Explication du système de fichiers Ouichefs")
