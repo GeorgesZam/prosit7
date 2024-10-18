@@ -101,7 +101,9 @@ Vous devez connecter votre module carte SD à l'Arduino en utilisant les broches
 - **CS (Chip Select)** : Connecter à la broche 4 de l'Arduino (ou une autre, selon la configuration).
 - **VCC** : Connecter au 5V de l'Arduino.
 - **GND** : Connecter à la masse de l'Arduino.
+
 """)
+
 
 st.subheader("Étape 2 : Installer la bibliothèque SD dans l'IDE Arduino")
 st.write("""
@@ -177,3 +179,96 @@ void readBlocks(const char* filename) {
 void loop() {
   // Boucle vide
 }
+
+# Interface Streamlit
+st.title("Simulation Ouichefs et Visualisation de Stockage")
+
+# Explication du fonctionnement d'Ouichefs
+st.header("Explication du système de fichiers Ouichefs")
+st.write("""
+**Ouichefs** est un système de fichiers simplifié conçu pour un environnement embarqué. Voici comment cela fonctionne :
+- **Nom des fichiers** : Limité à 8 caractères pour simplifier la gestion.
+- **Blocs de données** : Les fichiers sont découpés en blocs de 256 octets. Si un fichier dépasse cette taille, il sera divisé en plusieurs blocs.
+- **Limite des fichiers** : Le système ne peut gérer que 128 fichiers dans le répertoire racine.
+- Chaque fichier a des métadonnées associées (taille du fichier, nombre de blocs, etc.), qui sont stockées dans un répertoire appelé `root`.
+- Lors de la création d'un fichier, les données sont stockées sous forme de blocs de 256 octets dans la mémoire.
+- Lorsqu'un fichier est lu, les blocs de données sont rassemblés pour reconstituer le fichier complet.
+""")
+
+# Liste des fichiers dans ouichefs
+st.header("Fichiers sur le système ouichefs")
+files = ouichefs_list_files()
+if files:
+    st.write(files)
+else:
+    st.write("Aucun fichier sur le système de fichiers pour l'instant.")
+
+# Section pour créer un fichier
+st.header("Créer un fichier")
+filename = st.text_input("Nom du fichier (8 caractères max)")
+data = st.text_area("Données à écrire (max 1024 caractères)")
+
+if st.button("Écrire dans ouichefs"):
+    if filename and data:
+        if len(data) > 1024:
+            st.error("Données trop volumineuses. Limite de 1024 caractères.")
+        else:
+            result, data_blocks = ouichefs_create_file(filename, data)
+            st.success(result)
+
+            if data_blocks:  # Vérifier si la création du fichier a réussi
+                # Explication du stockage des blocs
+                st.subheader("Explication du stockage des blocs de données")
+                st.write(f"""
+                Le fichier **{filename}** a été découpé en {len(data_blocks)} bloc(s). Voici comment les données sont stockées :
+                - Taille totale du fichier : {len(data)} octets
+                - Chaque bloc est de 256 octets maximum.
+                - Voici les détails des blocs :
+                """)
+
+                # Afficher les détails des blocs
+                for i, block in enumerate(data_blocks):
+                    st.write(f"Bloc {i+1} : {len(block)} octets")
+
+                # Créer un diagramme avec Plotly pour visualiser les blocs
+                nodes = [f'File: {filename}']
+                edges = []
+                
+                # Ajouter les blocs de données comme nœuds et lier aux fichiers
+                for i, block in enumerate(data_blocks):
+                    block_name = f'Bloc {i+1} ({len(block)} octets)'
+                    nodes.append(block_name)
+                    edges.append((f'File: {filename}', block_name))
+                
+                # Créer un diagramme avec Plotly
+                fig = go.Figure()
+
+                for edge in edges:
+                    fig.add_trace(go.Scatter(
+                        x=[nodes.index(edge[0]), nodes.index(edge[1])],
+                        y=[1, 0],
+                        mode='lines+markers+text',
+                        text=[edge[0], edge[1]],
+                        line=dict(width=2, color='blue')
+                    ))
+
+                fig.update_layout(showlegend=False)
+                st.plotly_chart(fig)
+
+# Section pour lire un fichier
+st.header("Lire un fichier")
+file_to_read = st.selectbox("Choisir un fichier à lire", files)
+if st.button("Lire le fichier"):
+    content = ouichefs_read_file(file_to_read)
+    if isinstance(content, list):
+        st.write(f"Contenu du fichier {file_to_read}:")
+        for i, block in enumerate(content):
+            st.code(f"Block {i+1}: {block}")
+    else:
+        st.error(content)
+
+# Section pour rafraîchir la liste des fichiers
+st.header("État du système de fichiers ouichefs")
+if st.button("Rafraîchir la liste des fichiers"):
+    files = ouichefs_list_files()
+    st.write(files)
