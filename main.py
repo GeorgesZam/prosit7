@@ -46,15 +46,15 @@ def ouichefs_create_file(filename, data):
 
     # Limite de 8 caractères pour les noms de fichiers
     if len(filename) > 8:
-        return "Erreur : Nom de fichier trop long (limite : 8 caractères)"
+        return "Erreur : Nom de fichier trop long (limite : 8 caractères)", None
     
     # Vérifier si le fichier existe déjà
     if filename in fs['root']['files']:
-        return "Erreur : Fichier existe déjà"
+        return "Erreur : Fichier existe déjà", None
     
     # Stocker les données sous un format simplifié
     if len(fs['root']['files']) >= 128:
-        return "Erreur : Répertoire plein (128 fichiers max)"
+        return "Erreur : Répertoire plein (128 fichiers max)", None
 
     # Découper les données en blocs de 256 octets
     data_blocks = split_data_into_blocks(data)
@@ -104,41 +104,42 @@ if st.button("Écrire dans ouichefs"):
             result, data_blocks = ouichefs_create_file(filename, data)
             st.success(result)
 
-            # Initialize a new Digraph for the file system and memory structure
-            diagram = Digraph('FileSystemDiagram', comment='Ouichefs File System and RAM Structure')
+            if data_blocks:  # Vérifier si la création du fichier a réussi
+                # Initialize a new Digraph for the file system and memory structure
+                diagram = Digraph('FileSystemDiagram', comment='Ouichefs File System and RAM Structure')
 
-            # Create subgraphs for SD Card (File system) and RAM
-            with diagram.subgraph(name='cluster_sd') as sd_card:
-                sd_card.attr(label="SD Card (Ouichefs)")
-                sd_card.node('root', 'Root Directory')
-                sd_card.node(f'file_{filename}', f'File: {filename}')
-                
-                # Add data blocks as nodes
-                for i, block in enumerate(data_blocks):
-                    sd_card.node(f'block_{i+1}', f'Data Block {i+1} ({len(block)} bytes)')
-                    sd_card.edge(f'file_{filename}', f'block_{i+1}', label=f"Data Pointer {i+1}")
+                # Create subgraphs for SD Card (File system) and RAM
+                with diagram.subgraph(name='cluster_sd') as sd_card:
+                    sd_card.attr(label="SD Card (Ouichefs)")
+                    sd_card.node('root', 'Root Directory')
+                    sd_card.node(f'file_{filename}', f'File: {filename}')
+                    
+                    # Add data blocks as nodes
+                    for i, block in enumerate(data_blocks):
+                        sd_card.node(f'block_{i+1}', f'Data Block {i+1} ({len(block)} bytes)')
+                        sd_card.edge(f'file_{filename}', f'block_{i+1}', label=f"Data Pointer {i+1}")
 
-            with diagram.subgraph(name='cluster_ram') as ram:
-                ram.attr(label="RAM (Directory and Metadata)")
-                ram.node('directory_metadata', 'Directory Structure in RAM')
-                ram.node(f'file_metadata_{filename}', f'File Metadata ({filename})')
+                with diagram.subgraph(name='cluster_ram') as ram:
+                    ram.attr(label="RAM (Directory and Metadata)")
+                    ram.node('directory_metadata', 'Directory Structure in RAM')
+                    ram.node(f'file_metadata_{filename}', f'File Metadata ({filename})')
 
-                # Add pointers to each data block in RAM
-                for i in range(len(data_blocks)):
-                    ram.node(f'pointer_block{i+1}', f'Pointer to Block {i+1}')
-                    ram.edge(f'file_metadata_{filename}', f'pointer_block{i+1}', label=f"Pointer to Block {i+1}")
+                    # Add pointers to each data block in RAM
+                    for i in range(len(data_blocks)):
+                        ram.node(f'pointer_block{i+1}', f'Pointer to Block {i+1}')
+                        ram.edge(f'file_metadata_{filename}', f'pointer_block{i+1}', label=f"Pointer to Block {i+1}")
 
-            # Add an edge between the SD Card and RAM to represent loading the directory structure
-            diagram.edge('root', 'directory_metadata', label="Load into RAM")
-            diagram.edge(f'file_{filename}', f'file_metadata_{filename}', label="Load File Metadata into RAM")
+                # Add an edge between the SD Card and RAM to represent loading the directory structure
+                diagram.edge('root', 'directory_metadata', label="Load into RAM")
+                diagram.edge(f'file_{filename}', f'file_metadata_{filename}', label="Load File Metadata into RAM")
 
-            # Utilisation d'un fichier temporaire pour rendre le diagramme
-            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
-                diagram.render(tmpfile.name, format='png', cleanup=False)
-                tmpfile_path = tmpfile.name
+                # Utilisation d'un fichier temporaire pour rendre le diagramme
+                with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
+                    diagram.render(tmpfile.name, format='png', cleanup=False)
+                    tmpfile_path = tmpfile.name
 
-            # Afficher l'image générée dans Streamlit
-            st.image(tmpfile_path)
+                # Afficher l'image générée dans Streamlit
+                st.image(tmpfile_path)
     else:
         st.error("Veuillez entrer un nom de fichier et des données.")
 
