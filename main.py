@@ -181,7 +181,7 @@ void loop() {
   // Boucle vide
 }
 
-cpp '''
+
 """)
 
 
