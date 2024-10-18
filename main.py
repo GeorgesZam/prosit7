@@ -104,8 +104,7 @@ Vous devez connecter votre module carte SD à l'Arduino en utilisant les broches
 - **VCC** : Connecter au 5V de l'Arduino.
 - **GND** : Connecter à la masse de l'Arduino.
 
-Voici un schéma simple de connexion :
-
+""")
 
 
 # Interface Streamlit
