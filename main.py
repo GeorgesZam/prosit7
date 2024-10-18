@@ -107,6 +107,48 @@ Vous devez connecter votre module carte SD à l'Arduino en utilisant les broches
 """)
 
 
+st.subheader("Étape 2 : Installer la bibliothèque SD dans l'IDE Arduino")
+st.write("""
+L'Arduino nécessite la bibliothèque SD pour interagir avec la carte SD. Suivez ces étapes pour l'installer :
+
+1. Ouvrez l'IDE Arduino.
+2. Allez dans **Sketch** > **Include Library** > **Manage Libraries**.
+3. Recherchez la bibliothèque **SD** et installez-la.
+
+Une fois installée, vous êtes prêt à commencer à interagir avec la carte SD.
+""")
+
+st.subheader("Étape 3 : Initialiser la carte SD dans le code Arduino")
+st.write("""
+Voici un exemple de code pour initialiser la carte SD dans votre Arduino. Ce code vérifie si la carte SD est correctement connectée et fonctionne.
+
+```cpp
+#include <SPI.h>
+#include <SD.h>
+
+const int chipSelect = 4;  // Pin CS pour la carte SD
+
+void setup() {
+  Serial.begin(9600);
+  while (!Serial) {
+    ; // Attendre l'ouverture du port série
+  }
+
+  Serial.print("Initialisation de la carte SD...");
+
+  if (!SD.begin(chipSelect)) {
+    Serial.println("Échec de l'initialisation.");
+    return;
+  }
+  Serial.println("Initialisation réussie.");
+}
+
+void loop() {
+  // Boucle vide
+}
+""")
+
+
 # Interface Streamlit
 st.title("Simulation Ouichefs et Visualisation de Stockage")
 
