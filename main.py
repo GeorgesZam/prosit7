@@ -79,8 +79,6 @@ def ouichefs_list_files():
     fs = load_fs()
     return list(fs['root']['files'].keys())
 
-import streamlit as st
-
 # Interface de l'apprentissage
 st.title("Apprendre à utiliser Ouichefs sur Arduino avec une carte SD")
 
@@ -122,11 +120,11 @@ st.subheader("Étape 3 : Initialiser la carte SD dans le code Arduino")
 st.write("""
 Voici un exemple de code pour initialiser la carte SD dans votre Arduino. Ce code vérifie si la carte SD est correctement connectée et fonctionne.
 
-```cpp
 #include <SPI.h>
 #include <SD.h>
 
 const int chipSelect = 4;  // Pin CS pour la carte SD
+const int blockSize = 256; // Taille maximale d'un bloc de données
 
 void setup() {
   Serial.begin(9600);
@@ -134,18 +132,53 @@ void setup() {
     ; // Attendre l'ouverture du port série
   }
 
-  Serial.print("Initialisation de la carte SD...");
-
   if (!SD.begin(chipSelect)) {
-    Serial.println("Échec de l'initialisation.");
+    Serial.println("Échec de l'initialisation de la carte SD.");
     return;
   }
-  Serial.println("Initialisation réussie.");
+  Serial.println("Carte SD initialisée.");
+
+  // Créer un fichier avec des blocs de données
+  String data = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.";
+
+  // Découper les données en blocs de 256 octets
+  for (int i = 0; i < data.length(); i += blockSize) {
+    String block = data.substring(i, i + blockSize);
+    saveBlock("data.txt", block);
+  }
+
+  // Lire les blocs et les afficher
+  readBlocks("data.txt");
+}
+
+void saveBlock(const char* filename, String block) {
+  File dataFile = SD.open(filename, FILE_WRITE);
+  if (dataFile) {
+    dataFile.println(block);
+    dataFile.close();
+    Serial.println("Bloc enregistré.");
+  } else {
+    Serial.println("Erreur d'ouverture du fichier.");
+  }
+}
+
+void readBlocks(const char* filename) {
+  File dataFile = SD.open(filename);
+  if (dataFile) {
+    Serial.println("Lecture des blocs :");
+    while (dataFile.available()) {
+      Serial.write(dataFile.read());
+    }
+    dataFile.close();
+  } else {
+    Serial.println("Erreur d'ouverture du fichier.");
+  }
 }
 
 void loop() {
   // Boucle vide
 }
+
 """)
 
 
