@@ -82,6 +82,18 @@ def ouichefs_list_files():
 # Interface Streamlit
 st.title("Simulation Ouichefs et Visualisation de Stockage")
 
+# Explication du fonctionnement d'Ouichefs
+st.header("Explication du système de fichiers Ouichefs")
+st.write("""
+**Ouichefs** est un système de fichiers simplifié conçu pour un environnement embarqué. Voici comment cela fonctionne :
+- **Nom des fichiers** : Limité à 8 caractères pour simplifier la gestion.
+- **Blocs de données** : Les fichiers sont découpés en blocs de 256 octets. Si un fichier dépasse cette taille, il sera divisé en plusieurs blocs.
+- **Limite des fichiers** : Le système ne peut gérer que 128 fichiers dans le répertoire racine.
+- Chaque fichier a des métadonnées associées (taille du fichier, nombre de blocs, etc.), qui sont stockées dans un répertoire appelé `root`.
+- Lors de la création d'un fichier, les données sont stockées sous forme de blocs de 256 octets dans la mémoire.
+- Lorsqu'un fichier est lu, les blocs de données sont rassemblés pour reconstituer le fichier complet.
+""")
+
 # Liste des fichiers dans ouichefs
 st.header("Fichiers sur le système ouichefs")
 files = ouichefs_list_files()
@@ -104,13 +116,26 @@ if st.button("Écrire dans ouichefs"):
             st.success(result)
 
             if data_blocks:  # Vérifier si la création du fichier a réussi
-                # Create a Plotly diagram
+                # Explication du stockage des blocs
+                st.subheader("Explication du stockage des blocs de données")
+                st.write(f"""
+                Le fichier **{filename}** a été découpé en {len(data_blocks)} bloc(s). Voici comment les données sont stockées :
+                - Taille totale du fichier : {len(data)} octets
+                - Chaque bloc est de 256 octets maximum.
+                - Voici les détails des blocs :
+                """)
+
+                # Afficher les détails des blocs
+                for i, block in enumerate(data_blocks):
+                    st.write(f"Bloc {i+1} : {len(block)} octets")
+
+                # Créer un diagramme avec Plotly pour visualiser les blocs
                 nodes = [f'File: {filename}']
                 edges = []
                 
                 # Ajouter les blocs de données comme nœuds et lier aux fichiers
                 for i, block in enumerate(data_blocks):
-                    block_name = f'Block {i+1} ({len(block)} bytes)'
+                    block_name = f'Bloc {i+1} ({len(block)} octets)'
                     nodes.append(block_name)
                     edges.append((f'File: {filename}', block_name))
                 
@@ -128,8 +153,6 @@ if st.button("Écrire dans ouichefs"):
 
                 fig.update_layout(showlegend=False)
                 st.plotly_chart(fig)
-    else:
-        st.error("Veuillez entrer un nom de fichier et des données.")
 
 # Section pour lire un fichier
 st.header("Lire un fichier")
@@ -148,3 +171,4 @@ st.header("État du système de fichiers ouichefs")
 if st.button("Rafraîchir la liste des fichiers"):
     files = ouichefs_list_files()
     st.write(files)
+
