@@ -79,6 +79,35 @@ def ouichefs_list_files():
     fs = load_fs()
     return list(fs['root']['files'].keys())
 
+import streamlit as st
+
+# Interface de l'apprentissage
+st.title("Apprendre à utiliser Ouichefs sur Arduino avec une carte SD")
+
+st.write("""
+Dans cette interface interactive, nous allons vous guider pour comprendre comment installer et utiliser un système de fichiers comme **ouichefs** sur un **Arduino** connecté à une carte SD pour stocker des données.
+
+### Matériel requis :
+- Un Arduino (Uno, Mega, etc.).
+- Une carte SD et son module lecteur pour l'Arduino.
+- Des câbles pour connecter la carte SD à l'Arduino.
+- La bibliothèque SD pour Arduino.
+""")
+
+st.subheader("Étape 1 : Configuration matérielle")
+st.write("""
+Vous devez connecter votre module carte SD à l'Arduino en utilisant les broches suivantes :
+- **MISO** : Connecter à la broche 12 de l'Arduino.
+- **MOSI** : Connecter à la broche 11 de l'Arduino.
+- **SCK** : Connecter à la broche 13 de l'Arduino.
+- **CS (Chip Select)** : Connecter à la broche 4 de l'Arduino (ou une autre, selon la configuration).
+- **VCC** : Connecter au 5V de l'Arduino.
+- **GND** : Connecter à la masse de l'Arduino.
+
+Voici un schéma simple de connexion :
+
+
+
 # Interface Streamlit
 st.title("Simulation Ouichefs et Visualisation de Stockage")
 
