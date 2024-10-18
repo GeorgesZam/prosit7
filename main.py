@@ -1,10 +1,7 @@
 import os
 import json
-from graphviz import Digraph
 import streamlit as st
-import tempfile
-from io import BytesIO
-from PIL import Image
+import plotly.graph_objects as go
 
 # Créer un répertoire pour simuler la carte SD
 SD_CARD_DIR = "ouichefs_sd_card"
@@ -107,40 +104,30 @@ if st.button("Écrire dans ouichefs"):
             st.success(result)
 
             if data_blocks:  # Vérifier si la création du fichier a réussi
-                # Initialize a new Digraph for the file system and memory structure
-                diagram = Digraph('FileSystemDiagram', comment='Ouichefs File System and RAM Structure')
+                # Create a Plotly diagram
+                nodes = [f'File: {filename}']
+                edges = []
+                
+                # Ajouter les blocs de données comme nœuds et lier aux fichiers
+                for i, block in enumerate(data_blocks):
+                    block_name = f'Block {i+1} ({len(block)} bytes)'
+                    nodes.append(block_name)
+                    edges.append((f'File: {filename}', block_name))
+                
+                # Créer un diagramme avec Plotly
+                fig = go.Figure()
 
-                # Create subgraphs for SD Card (File system) and RAM
-                with diagram.subgraph(name='cluster_sd') as sd_card:
-                    sd_card.attr(label="SD Card (Ouichefs)")
-                    sd_card.node('root', 'Root Directory')
-                    sd_card.node(f'file_{filename}', f'File: {filename}')
-                    
-                    # Add data blocks as nodes
-                    for i, block in enumerate(data_blocks):
-                        sd_card.node(f'block_{i+1}', f'Data Block {i+1} ({len(block)} bytes)')
-                        sd_card.edge(f'file_{filename}', f'block_{i+1}', label=f"Data Pointer {i+1}")
+                for edge in edges:
+                    fig.add_trace(go.Scatter(
+                        x=[nodes.index(edge[0]), nodes.index(edge[1])],
+                        y=[1, 0],
+                        mode='lines+markers+text',
+                        text=[edge[0], edge[1]],
+                        line=dict(width=2, color='blue')
+                    ))
 
-                with diagram.subgraph(name='cluster_ram') as ram:
-                    ram.attr(label="RAM (Directory and Metadata)")
-                    ram.node('directory_metadata', 'Directory Structure in RAM')
-                    ram.node(f'file_metadata_{filename}', f'File Metadata ({filename})')
-
-                    # Add pointers to each data block in RAM
-                    for i in range(len(data_blocks)):
-                        ram.node(f'pointer_block{i+1}', f'Pointer to Block {i+1}')
-                        ram.edge(f'file_metadata_{filename}', f'pointer_block{i+1}', label=f"Pointer to Block {i+1}")
-
-                # Add an edge between the SD Card and RAM to represent loading the directory structure
-                diagram.edge('root', 'directory_metadata', label="Load into RAM")
-                diagram.edge(f'file_{filename}', f'file_metadata_{filename}', label="Load File Metadata into RAM")
-
-                # Rendre le diagramme dans un objet BytesIO
-                image_stream = BytesIO(diagram.pipe(format='png'))
-
-                # Afficher l'image générée dans Streamlit
-                image = Image.open(image_stream)
-                st.image(image)
+                fig.update_layout(showlegend=False)
+                st.plotly_chart(fig)
     else:
         st.error("Veuillez entrer un nom de fichier et des données.")
 
