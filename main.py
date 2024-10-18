@@ -121,6 +121,7 @@ st.write("""
 Voici un exemple de code pour initialiser la carte SD dans votre Arduino. Ce code vérifie si la carte SD est correctement connectée et fonctionne.
 
 ''' cpp
+
 #include <SPI.h>
 #include <SD.h>
 
@@ -179,6 +180,7 @@ void readBlocks(const char* filename) {
 void loop() {
   // Boucle vide
 }
+
 cpp '''
 """)
 
